@@ -1,3 +1,4 @@
 Name        github-Username     email
 
 Xuan        27tang              27tang@gmail.com
+JamesR       Sedihglow           jamr2@pdx.edu

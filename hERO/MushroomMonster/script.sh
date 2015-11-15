@@ -1,6 +1,6 @@
 #!/bin/bash
 
-cat A-small-practice.in | \
+cat A-large-practice.in | \
 	awk '
 		BEGIN {
 			count = 1;
@@ -48,5 +48,4 @@ cat A-small-practice.in | \
 			++line;
 		}
 		END {
-			printf "done"
 		}'

@@ -7,33 +7,32 @@
    Current index inside of buffer. ... are the stopping conditionals */
 #define getBufLine(buffer, res, bfPl, ...)                      \
 {                                                               \
-    int _TM_;                                                   \
-    for(_TM_ = 0; __VA_ARGS__; ++tm, ++bfPl){                   \
+    int _TM_ = 0;                                               \
+    for(_TM_ = 0; __VA_ARGS__; ++_TM_, ++bfPl){                 \
         res[_TM_] = buffer[bfPl];}                              \
-    ++bfPl; /* skip newline */                                  \
+    ++bfPl; /* skip delimiter */                                \
     res[_TM_] = '\0';                                           \
 }
 
 int main()
 {
-    int *result[2] = {NULL};
+    int* result[2] = {NULL};
     gather_results(result);
-    free_all(result[0], result[1], result);
+    free_all(result[0], result[1]);
     exit(EXIT_SUCCESS);
 }
 
 int gather_results(int *result[])
 {
+    int fd       = 0;       /* file descriptior */
     int minOne   = 0;       /* minimum method 1 */
     int numTests = 0;       /* number of tests in file */
     int sampNum  = 0;       /* ammount of samples */
     int prevVal  = 0;       /* previous sample values */
     int curVal   = 0;       /* current sample value */
     int bfPl     = 0;       /* place from inBuff */
-    int tm       = 0;       /* place in numStr */
     int i        = 0;
     int j        = 0;
-    int fd       = 0;       /* file descriptior */
     ssize_t retBytes = 0;   /* byte value returned from a read or write */
     char inBuff[IN_BUF_] = {'\0'};  /* input buffer ;) */
     char numStr[TM_BUF_] = {'\0'};  /* String to be converted to an int from buf */
@@ -58,6 +57,8 @@ int gather_results(int *result[])
     for(i = 0; i < numTests; ++i)
     {
         minOne = 0;
+        /*minTwo = 0;*/
+        
         /* get input from #of samples */
         getBufLine(inBuff, numStr, bfPl, inBuff[bfPl] != '\n');
         sampNum = getInt(numStr, 0, "sampNum");
@@ -66,12 +67,6 @@ int gather_results(int *result[])
         getBufLine(inBuff, numStr, bfPl, inBuff[bfPl] != '\n' && inBuff[bfPl] != ' ');
         prevVal = getInt(numStr, 0, "prevVal");
 
-        if(sampNum == 1)
-        {
-            minOne = prevVal;
-            /*results[1][i] = prevVal;*/
-        }
-        
         --sampNum; /* prevVal holds the first sample */
         for(j = 0; j < sampNum; ++j)
         {
@@ -83,6 +78,12 @@ int gather_results(int *result[])
             /* minTwo += method_two() */
 
             prevVal = curVal;
+        }
+
+        if(sampNum == 0)
+        {
+            minOne = prevVal;
+            /*results[1][i] = prevVal;*/
         }
 
         /* place result in correct place */

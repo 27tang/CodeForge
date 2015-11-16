@@ -1,22 +1,22 @@
 #include "mush.h"
 
 #define IN_BUF_ 1000000
-#define TM_BUF_ 10 /* an integer is only up to 10 digits, I.E 10 characters. */
+#define TM_BUF_ 11 /* an integer is only up to 10 digits, I.E 10 characters. */
 
 /* buffer to get information from (char*). Where to place the result (char*),
    Current index inside of buffer. ... are the stopping conditionals */
-#define getBufLine(buffer, res, bfPl, ...)                      \
+static inline void getBufLine(char *buffer, char *res, int bfPl)                      \
 {                                                               \
-    int _TM_ = 0;                                               \
-    for(_TM_ = 0; __VA_ARGS__; ++_TM_, ++bfPl){                 \
-        res[_TM_] = buffer[bfPl];}                              \
-    ++bfPl; /* skip delimiter */                                \
+    int _TM_ = 0;                                           \
+    for(_TM_ = 0;  buffer[bfPl] != '\n' && buffer[bfPl] != ' '; ++_TM_, ++(bfPl)){               \
+        res[_TM_] = buffer[(bfPl)];}                              \
+    ++(bfPl); /* skip delimiter */                                \
     res[_TM_] = '\0';                                           \
 }
 
 int main()
 {
-    int* result[2] = {NULL};
+    int *result[2] = {NULL};
     gather_results(result);
     free_all(result[0], result[1]);
     exit(EXIT_SUCCESS);
@@ -34,7 +34,7 @@ int gather_results(int *result[])
     int i        = 0;
     int j        = 0;
     ssize_t retBytes = 0;   /* byte value returned from a read or write */
-    char inBuff[IN_BUF_] = {'\0'};  /* input buffer ;) */
+    char inBuff[IN_BUF_] = {'\0'};  /* input buffer */
     char numStr[TM_BUF_] = {'\0'};  /* String to be converted to an int from buf */
     
     fd = open("smallpractice", O_RDWR);
@@ -47,7 +47,7 @@ int gather_results(int *result[])
         inBuff[retBytes-1] = '\0';}
    
     /* get number of tests */
-    getBufLine(inBuff, numStr, bfPl, inBuff[bfPl] != '\n');
+    getBufLine(inBuff, numStr, bfPl);
     numTests = getInt(numStr, 0, "numTests");
 
     result[0] = (int*) malloc(sizeof(int)*numTests);
@@ -60,17 +60,17 @@ int gather_results(int *result[])
         /*minTwo = 0;*/
         
         /* get input from #of samples */
-        getBufLine(inBuff, numStr, bfPl, inBuff[bfPl] != '\n');
+        getBufLine(inBuff, numStr, bfPl);
         sampNum = getInt(numStr, 0, "sampNum");
 
         /* pull first sample from file */
-        getBufLine(inBuff, numStr, bfPl, inBuff[bfPl] != '\n' && inBuff[bfPl] != ' ');
+        getBufLine(inBuff, numStr, bfPl);
         prevVal = getInt(numStr, 0, "prevVal");
 
         --sampNum; /* prevVal holds the first sample */
         for(j = 0; j < sampNum; ++j)
         {
-            getBufLine(inBuff, numStr, bfPl, inBuff[bfPl] != '\n' && inBuff[bfPl] != ' ');
+            getBufLine(inBuff, numStr, bfPl);
             curVal = getInt(numStr, 0, "curVal");
             
             /* get the mins */
@@ -112,7 +112,7 @@ int method_one(int prev, int cur)
 }
 
 
-void display_results(int *methOne, int numTests)
+void display_results(int *result[], int numTests)
 {
 
 

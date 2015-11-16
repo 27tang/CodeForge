@@ -12,6 +12,6 @@ int method_one(int prev, int cur);
    that stuff.
    results[0] = method1;
    results[1] = method2; */
-int gather_results(int *results[]);
+int gather_results(int *result[]);
 /* print the results of each method */
-void display_results(int *methOne, int numTests);
+void display_results(int *result[], int numTests);

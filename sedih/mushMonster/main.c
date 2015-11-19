@@ -7,7 +7,7 @@
 #define alloc_buff(buff)                                                       \
 {                                                                              \
     ssize_t _retBytes = 0;                                                     \
-    if((_retBytes = read(fd, (void*) buff, IN_BUF_-1)) == -1){                         \
+    if((_retBytes = read(fd, (void*) buff, IN_BUF_-1)) == -1){                 \
         errExit("alloc_buf(): read() failure");}                               \
     (_retBytes < IN_BUF_-1) ? (buff[_retBytes] = '\0')                         \
                             : (buff[IN_BUF_-1] = '\0');                        \
@@ -105,8 +105,7 @@ int gather_results(int *result[])/*#{{{*/
         }
         
         /* if there was only 1 sample --; */
-        if(sampNum == 0)
-        {
+        if(sampNum == 0){
             minOne = prev;
             minTwo = prev;
         }

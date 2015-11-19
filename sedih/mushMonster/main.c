@@ -41,21 +41,60 @@
         setBuf(fd, inBuf, bfPl);}                                              \
 } /* end getNumString */
 
+/* executes method two and returns the results in an int corresponding
+   to the result that will be printed. returns the samples min */
+static inline int method_one(int prev, int cur)/*#{{{*/
+{
+    int res = 0;
+
+    if(prev > cur)
+    {
+        res = (prev - cur);
+        return res;
+    }
+    return 0;
+} /* end method_one #}}} */
+
+static inline int method_two(int prev, int cur, int mps)/*#{{{*/
+{
+    int min = 0;
+
+    if(prev < cur){
+        min = prev;}
+    else{
+        min = mps;}
+
+    return min;
+}/* end #}}} */
+
+/* goes through the file, pulls all the stuff, calls the methods for the stuff.
+   that stuff. */
+static inline int high_diff(int cur)/*#{{{*/
+{
+    int highDiff = 0;
+
+    if(cur > highDiff){
+        highDiff = cur;}
+
+    return highDiff;
+} /* end method_two #}}} */
+
 /* executes method one and returns the results in an int corresponding
    to the result that will be printed. returns the samples min.*/
 static inline int gather_results(int fd, int *result[])/*#{{{*/
 {
     int numTests = 0;   /* number of tests in file */
     int sampNum  = 0;   /* ammount of samples */
+    int highDiff = 0;   /* highest difference between samples in a set */
     int minOne, minTwo; /* method 1/2 current min */
     int prev, cur;      /* prev/cur sample value */
     int i, j;           /* increments */
 
     char *bufPl = NULL;            /* current place in input buffer */
+    char *svPl  = NULL;            /* saved place in buffer for method 2 info */
     char inBuff[IN_BUF_] = {'\0'}; /* input buffer */
     char numStr[TM_BUF_] = {'\0'}; /* string to be converted */
     i = j = minOne = minTwo = prev = cur = 0;
-    
     
     /* fill the input buffer */
     setBuf(fd, inBuff, bufPl);
@@ -77,10 +116,14 @@ static inline int gather_results(int fd, int *result[])/*#{{{*/
         getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n');
         sampNum = getInt(numStr, 0, "sampNum");
 
+        /* save buff place */
+        svPl = bufPl;
+
         /* pull first sample from file */
         getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n' && *bufPl != ' ');
-        prev = getInt(numStr, 0, "prev");
+        highDiff = prev = getInt(numStr, 0, "prev");
 
+        /* executes method 1, gathers high difference */
         --sampNum; /* prevVal holds the first sample */
         for(j = 0; j < sampNum; ++j)
         {
@@ -90,11 +133,22 @@ static inline int gather_results(int fd, int *result[])/*#{{{*/
             
             /* gather the minimums */
             minOne += method_one(prev, cur);
-            minTwo += method_two(sampNum+1, prev,  cur);
+            highDiff = high_diff(cur);
 
+            /* TODO: Need to finish method 2. I wanted to figure out how to do
+                     it without building an integer array to go through and
+                     find the highDiff in order to do method 2. 
+                     
+                     Previous and current technique worked well for method one 
+                     but i am having issues finding a way to obtain the highDiff 
+                     in such a way that i can only use prev/cur. So i should
+                     probably restructure for an array. Any algorithm i could
+                     think of to prevent using the array seems grossly
+                     inefficient */
+        
             prev = cur;
         }
-        
+
         /* if there was only 1 sample --; */
         if(sampNum == 0){
             minOne = prev;
@@ -108,37 +162,6 @@ static inline int gather_results(int fd, int *result[])/*#{{{*/
 
     return numTests;
 } /* end gather_results #}}} */
-
-/* executes method two and returns the results in an int corresponding
-   to the result that will be printed. returns the samples min */
-static inline int method_one(int prev, int cur)/*#{{{*/
-{
-    int res = 0;
-
-    if(prev > cur)
-    {
-        res = (prev - cur);
-        return res;
-    }
-    return 0;
-} /* end method_one #}}} */
-
-/* goes through the file, pulls all the stuff, calls the methods for the stuff.
-   that stuff.
-   results[0] = method1;
-   results[1] = method2; */
-static inline int method_two(int sampNum, int prev, int cur)/*#{{{*/
-{
-#define MEPI 10 /* min eaten per interval */
-    int min = (sampNum * MEPI);
-
-    if(prev < cur){
-        min = prev;}
-    else{
-        min = 10;}
-    return min;
-#undef MEPI
-} /* end method_two #}}} */
 
 /* print the results of each method */
 static inline void display_results(int *result[], int numTests)/*#{{{*/

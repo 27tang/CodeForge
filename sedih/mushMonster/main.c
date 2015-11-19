@@ -3,7 +3,7 @@
 #define IN_BUF_ 512
 #define TM_BUF_ 16
 
-/* allocate an input buffer */
+/* allocate an input buffer with a '\0' terminatior at the end */
 #define alloc_buff(buff)                                                       \
 {                                                                              \
     ssize_t _retBytes = 0;                                                     \
@@ -21,10 +21,10 @@
 } /* end resetBuf */
 
 /* get the number string from the input buffer */
-#define getNumString(inBuf, bfPl, resStr)                                      \
+#define getNumString(inBuf, bfPl, resStr, conditional)                         \
 {                                                                              \
     int _TM_ = 0;                                                              \
-    for(_TM_ = 0; *bfPl != '\n' && *bfPl != ' '; ++_TM_)                       \
+    for(_TM_ = 0; conditional; ++_TM_)                                         \
     {                                                                          \
         resStr[_TM_] = *bfPl;                                                  \
         ++bfPl;                  /* increase buff placement */                 \
@@ -35,7 +35,7 @@
     resStr[_TM_] = '\0';                                                       \
     if(*bfPl == '\0'){ /* reached end of current buffer */                     \
         setBuf(inBuf, bfPl);}                                                  \
-} /* end alloc_bff */
+} /* end getNumString */
 
 int main()
 {
@@ -70,7 +70,7 @@ int gather_results(int *result[])/*#{{{*/
     setBuf(inBuff, bufPl);
     
     /* get number of tests */
-    getNumString(inBuff, bufPl, numStr);
+    getNumString(inBuff, bufPl, numStr, *bufPl != '\n');
     numTests = getInt(numStr, 0, "numTests");
 
     /* allocate room for method 1 and method two results */
@@ -83,18 +83,18 @@ int gather_results(int *result[])/*#{{{*/
         minTwo = 0;
 
         /* get input from #of samples */
-        getNumString(inBuff, bufPl, numStr);
+        getNumString(inBuff, bufPl, numStr, *bufPl != '\n');
         sampNum = getInt(numStr, 0, "sampNum");
 
         /* pull first sample from file */
-        getNumString(inBuff, bufPl, numStr);
+        getNumString(inBuff, bufPl, numStr, *bufPl != '\n' && *bufPl != ' ');
         prev = getInt(numStr, 0, "prev");
 
         --sampNum; /* prevVal holds the first sample */
         for(j = 0; j < sampNum; ++j)
         {
             /* get next value in the buffer */
-            getNumString(inBuff, bufPl, numStr);
+            getNumString(inBuff, bufPl, numStr, *bufPl != '\n' && *bufPl != ' ');
             cur = getInt(numStr, 0, "cur");
             
             /* gather the minimums */

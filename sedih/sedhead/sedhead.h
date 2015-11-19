@@ -39,7 +39,7 @@
     #include <sys/time.h>
 
     /* allocate an input buffer with a '\0' terminatior at the end */
-    #define allocInputBuff(buff)                                               \
+    #define allocInputBuff(fd, buff)                                           \
     {                                                                          \
         ssize_t _retBytes = 0;                                                 \
         if((_retBytes = read(fd, (void*) buff, IN_BUF_-1)) == -1){             \
@@ -49,7 +49,7 @@
     } 
 
     /* reset the input buffer after first allocation */
-    #define setInputBuf(buff, bfPl)                                            \
+    #define setInputBuf(fd, buff, bfPl)                                        \
     {                                                                          \
         alloc_buff(buff);                                                      \
         bfPl = buff;                                                           \
@@ -153,7 +153,7 @@ typedef enum {false, true} Bool;
 /* Copy a variable ammount of characters from a buffer based on a given position
    and place in resStr based on a conditional. Terminating the resStr with a '\0'
    value.  */
-#define getBufString(inBuf, bfPl, resStr, conditional)                         \
+#define getBufString(fd, inBuf, bfPl, resStr, conditional)                     \
 {                                                                              \
     int _TM_ = 0;                                                              \
     for(_TM_ = 0; conditional; ++_TM_)                                         \
@@ -161,12 +161,12 @@ typedef enum {false, true} Bool;
         resStr[_TM_] = *bfPl;                                                  \
         ++bfPl;                  /* increase buff placement */                 \
         if(*bfPl == '\0'){ /* reached end of current buffer */                 \
-            setBuf(inBuf, bfPl);}                                              \
+            setBuf(fd, inBuf, bfPl);}                                          \
     } /* end for */                                                            \
     ++bfPl;                                                                    \
     resStr[_TM_] = '\0';                                                       \
     if(*bfPl == '\0'){ /* reached end of current buffer */                     \
-        setBuf(inBuf, bfPl);}                                                  \
+        setBuf(fd, inBuf, bfPl);}                                              \
 } 
 
 /* create a bit mask for a given range of bits. start, end. (lsb,msb) */

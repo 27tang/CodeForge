@@ -1,0 +1,5 @@
+while [ -z $str ]; then
+do
+  ..
+  shift
+done

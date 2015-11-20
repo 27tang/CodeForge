@@ -1,33 +1,29 @@
 #!/bin/bash
 
-
-
 read -r numberOfCases 
-#echo wallabingbang\n
-#echo $numberOfCases
-#echo dingdong\n
+nums=$(($numberOfCases))
 
-nums=$((2*$numberOfCases))
 for i in `seq 1 $nums`
   do
-    read -r numPlates 
-    
+    read -r numPlates
+    #echo NUM PLATES
+    #echo $numPlates 
+    #echo ----------------
     total=0
 
-    read -r prev
-    for j in `seq 2 $numPlate`
+    read -r line
+    plates=($line)
+    for ((i=1; i < $((${#plates[@]} )); i++))
     do
-      read -r line
-      plates=($line)
-      for plate in $plates;
-      do
-        res=$(($curr - $prev))
-        if [ $(($res > 0)) ]; then
-          #((total=$total+ $curr - $prev))
-          echo $res
-        fi
-      done
+      diff=$((${plates[$(($i - 1))]}-${plates[$i]}))
+      if [ $diff -ge 0 ]; then
+        total=$(($total + $diff))
+      fi
+      #total=$(($total + plates[$i]
+      #$echo $total
     done
+   echo $total
+   total=0 
 
   done
 

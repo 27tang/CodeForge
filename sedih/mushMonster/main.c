@@ -1,76 +1,106 @@
-#include "mush.h"
+/* header for the mush problem */
+#define __SED_ERR__
+#define __SED_NUM__
+#define __SED_LINUX__
+#include "../sedhead/sedhead.h"
 
 #define IN_BUF_ 512
 #define TM_BUF_ 16
 
-/* allocate an input buffer */
-#define alloc_buff(buff)                                                       \
+/* allocate an input buffer with a '\0' terminatior at the end */
+#define alloc_buff(fd, buff)                                                   \
 {                                                                              \
     ssize_t _retBytes = 0;                                                     \
-    if((_retBytes = read(fd, (void*) buff, IN_BUF_-1)) == -1){                         \
+    if((_retBytes = read(fd, (void*) buff, IN_BUF_-1)) == -1){                 \
         errExit("alloc_buf(): read() failure");}                               \
     (_retBytes < IN_BUF_-1) ? (buff[_retBytes] = '\0')                         \
                             : (buff[IN_BUF_-1] = '\0');                        \
-} /* end alloc_buff */
+} 
 
 /* reset the input buffer after first allocation */
-#define setBuf(buff, bfPl)                                                     \
+#define setBuf(fd, buff, bfPl)                                                 \
 {                                                                              \
-    alloc_buff(buff);                                                          \
+    alloc_buff(fd, buff);                                                      \
     bfPl = buff;                                                               \
-} /* end resetBuf */
+}
 
 /* get the number string from the input buffer */
-#define getNumString(inBuf, bfPl, resStr)                                      \
+#define getNumString(fd, inBuf, bfPl, resStr, conditional)                     \
 {                                                                              \
     int _TM_ = 0;                                                              \
-    for(_TM_ = 0; *bfPl != '\n' && *bfPl != ' '; ++_TM_)                       \
+    for(_TM_ = 0; conditional; ++_TM_)                                         \
     {                                                                          \
         resStr[_TM_] = *bfPl;                                                  \
         ++bfPl;                  /* increase buff placement */                 \
         if(*bfPl == '\0'){ /* reached end of current buffer */                 \
-            setBuf(inBuf, bfPl);}                                              \
+            setBuf(fd, inBuf, bfPl);}                                          \
     } /* end for */                                                            \
     ++bfPl;                                                                    \
     resStr[_TM_] = '\0';                                                       \
     if(*bfPl == '\0'){ /* reached end of current buffer */                     \
-        setBuf(inBuf, bfPl);}                                                  \
-} /* end alloc_bff */
+        setBuf(fd, inBuf, bfPl);}                                              \
+} /* end getNumString */
 
-int main()
+/* executes method two and returns the results in an int corresponding
+   to the result that will be printed. returns the samples min */
+static inline int method_one(int prev, int cur)/*#{{{*/
 {
-    int *result[2] = {NULL};
-    int numTests = 0;
-    numTests = gather_results(result);
-    display_results(result, numTests);
-    free_all(result[0], result[1]);
-    exit(EXIT_SUCCESS);
-}
+    int res = 0;
 
-int gather_results(int *result[])/*#{{{*/
+    if(prev > cur)
+    {
+        res = (prev - cur);
+        return res;
+    }
+    return 0;
+} /* end method_one #}}} */
+
+static inline int method_two(int prev, int cur, int mps)/*#{{{*/
 {
-    int fd       = 0;   /* file descriptor */
+    int min = 0;
+
+    if(prev < cur){
+        min = prev;}
+    else{
+        min = mps;}
+
+    return min;
+}/* end #}}} */
+
+/* goes through the file, pulls all the stuff, calls the methods for the stuff.
+   that stuff. */
+static inline int high_diff(int cur)/*#{{{*/
+{
+    int highDiff = 0;
+
+    if(cur > highDiff){
+        highDiff = cur;}
+
+    return highDiff;
+} /* end method_two #}}} */
+
+/* executes method one and returns the results in an int corresponding
+   to the result that will be printed. returns the samples min.*/
+static inline int gather_results(int fd, int *result[])/*#{{{*/
+{
     int numTests = 0;   /* number of tests in file */
     int sampNum  = 0;   /* ammount of samples */
+    int highDiff = 0;   /* highest difference between samples in a set */
     int minOne, minTwo; /* method 1/2 current min */
     int prev, cur;      /* prev/cur sample value */
     int i, j;           /* increments */
 
     char *bufPl = NULL;            /* current place in input buffer */
+    char *svPl  = NULL;            /* saved place in buffer for method 2 info */
     char inBuff[IN_BUF_] = {'\0'}; /* input buffer */
     char numStr[TM_BUF_] = {'\0'}; /* string to be converted */
     i = j = minOne = minTwo = prev = cur = 0;
     
-    /* open the sample file */
-    fd = open("largePractice", O_RDWR);
-    if(fd == -1){
-        errExit("gather_results: Opening file failed");}
-    
     /* fill the input buffer */
-    setBuf(inBuff, bufPl);
+    setBuf(fd, inBuff, bufPl);
     
     /* get number of tests */
-    getNumString(inBuff, bufPl, numStr);
+    getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n');
     numTests = getInt(numStr, 0, "numTests");
 
     /* allocate room for method 1 and method two results */
@@ -83,30 +113,44 @@ int gather_results(int *result[])/*#{{{*/
         minTwo = 0;
 
         /* get input from #of samples */
-        getNumString(inBuff, bufPl, numStr);
+        getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n');
         sampNum = getInt(numStr, 0, "sampNum");
 
-        /* pull first sample from file */
-        getNumString(inBuff, bufPl, numStr);
-        prev = getInt(numStr, 0, "prev");
+        /* save buff place */
+        svPl = bufPl;
 
+        /* pull first sample from file */
+        getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n' && *bufPl != ' ');
+        highDiff = prev = getInt(numStr, 0, "prev");
+
+        /* executes method 1, gathers high difference */
         --sampNum; /* prevVal holds the first sample */
         for(j = 0; j < sampNum; ++j)
         {
             /* get next value in the buffer */
-            getNumString(inBuff, bufPl, numStr);
+            getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n' && *bufPl != ' ');
             cur = getInt(numStr, 0, "cur");
             
             /* gather the minimums */
             minOne += method_one(prev, cur);
-            minTwo += method_two(sampNum+1, prev,  cur);
+            highDiff = high_diff(cur);
 
+            /* TODO: Need to finish method 2. I wanted to figure out how to do
+                     it without building an integer array to go through and
+                     find the highDiff in order to do method 2. 
+                     
+                     Previous and current technique worked well for method one 
+                     but i am having issues finding a way to obtain the highDiff 
+                     in such a way that i can only use prev/cur. So i should
+                     probably restructure for an array. Any algorithm i could
+                     think of to prevent using the array seems grossly
+                     inefficient */
+        
             prev = cur;
         }
-        
+
         /* if there was only 1 sample --; */
-        if(sampNum == 0)
-        {
+        if(sampNum == 0){
             minOne = prev;
             minTwo = prev;
         }
@@ -116,38 +160,11 @@ int gather_results(int *result[])/*#{{{*/
         result[1][i] = minTwo;
     }
 
-    if(close(fd) == -1){
-        errExit("gather_results: close() failure");}
-
     return numTests;
 } /* end gather_results #}}} */
 
-int method_one(int prev, int cur)/*#{{{*/
-{
-    int res = 0;
-
-    if(prev > cur)
-    {
-        res = (prev - cur);
-        return res;
-    }
-    return 0;
-} /* end method_one #}}} */
-
-int method_two(int sampNum, int prev, int cur)/*#{{{*/
-{
-#define MEPI 10 /* min eaten per interval */
-    int min = (sampNum * MEPI);
-
-    if(prev < cur){
-        min = prev;}
-    else{
-        min = 10;}
-    return min;
-#undef MEPI
-} /* end method_two #}}} */
-
-void display_results(int *result[], int numTests)/*#{{{*/
+/* print the results of each method */
+static inline void display_results(int *result[], int numTests)/*#{{{*/
 {
 #define TM_BF_  4096
     int i = 0;
@@ -164,3 +181,29 @@ void display_results(int *result[], int numTests)/*#{{{*/
     }
 #undef TM_BF_
 } /* end display_results #}}} */
+
+int main(int argc, char *argv[])
+{
+    int *result[2] = {NULL};
+    int numTests = 0;
+    int fd       = 0;   /* file descriptor */
+
+    if(argc != 2){
+        noerrExit("CommandLine argument: invalid number of arguments\n$cmd path");}
+
+    /* open the sample file */
+    fd = open(argv[1], O_RDWR);
+    if(fd == -1){
+        errExit("gather_results: Opening file failed");}
+
+    numTests = gather_results(fd, result);
+    display_results(result, numTests);
+    free_all(result[0], result[1]);
+
+    /* close the sample file */
+    if(close(fd) == -1){
+        errExit("gather_results: close() failure");}
+
+    exit(EXIT_SUCCESS);
+}
+

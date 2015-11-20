@@ -41,76 +41,60 @@
         setBuf(fd, inBuf, bfPl);}                                              \
 } /* end getNumString */
 
-/* method 1 of the mushroom monster problem */
-static int method_one(int *samples, int sampNum)/*#{{{*/
+/* executes method two and returns the results in an int corresponding
+   to the result that will be printed. returns the samples min */
+static inline int method_one(int prev, int cur)/*#{{{*/
 {
-    int res  = 0;
-    int prev = 0;
-    int cur  = 0;
-    int i    = 0;
+    int res = 0;
 
-    prev = samples[0];
-    for(i = 1; i < sampNum; ++i)
+    if(prev > cur)
     {
-        cur = samples[i];
-        if(prev > cur){
-            res += (prev - cur);}
-        prev = cur;
+        res = (prev - cur);
+        return res;
     }
-    return res;
+    return 0;
 } /* end method_one #}}} */
 
-/* method 2 of the mushroom monster problem */
-static int method_two(int *samples, int sampNum)/*#{{{*/
+static inline int method_two(int prev, int cur, int mps)/*#{{{*/
 {
-    int min  = 0;
-    int mps  = 0; /* mushrooms per second */
-    int prev = 0;
-    int cur  = 0;
-    int i    = 0;
+    int min = 0;
 
-    /* find the mushrooms per second eaten */
-    prev = samples[0];
-    for(i = 1; i < sampNum; ++i)
-    {
-        cur = samples[i];
-        if(prev > cur){
-        mps = ((prev - cur) > mps) ? (prev - cur) : mps;}
-
-        prev = cur;
-    }
-    
-    /* find solution to method 2 */
-    prev = samples[0];
-    for(i = 1; i < sampNum; ++i)
-    {
-        cur = samples[i];
-        if(prev < cur){
-            min += prev;}
-        else{
-            min += mps;}
-
-        prev = cur;
-    }
+    if(prev < cur){
+        min = prev;}
+    else{
+        min = mps;}
 
     return min;
 }/* end #}}} */
 
+/* goes through the file, pulls all the stuff, calls the methods for the stuff.
+   that stuff. */
+static inline int high_diff(int cur)/*#{{{*/
+{
+    int highDiff = 0;
+
+    if(cur > highDiff){
+        highDiff = cur;}
+
+    return highDiff;
+} /* end method_two #}}} */
 
 /* executes method one and returns the results in an int corresponding
    to the result that will be printed. returns the samples min.*/
-static int gather_results(int fd, int *result[])/*#{{{*/
+static inline int gather_results(int fd, int *result[])/*#{{{*/
 {
     int numTests = 0;   /* number of tests in file */
     int sampNum  = 0;   /* ammount of samples */
+    int highDiff = 0;   /* highest difference between samples in a set */
     int minOne, minTwo; /* method 1/2 current min */
+    int prev, cur;      /* prev/cur sample value */
     int i, j;           /* increments */
-    int *samples = NULL;/* the given sampNum of samples */
 
     char *bufPl = NULL;            /* current place in input buffer */
+    char *svPl  = NULL;            /* saved place in buffer for method 2 info */
     char inBuff[IN_BUF_] = {'\0'}; /* input buffer */
     char numStr[TM_BUF_] = {'\0'}; /* string to be converted */
-    i = j = minOne = minTwo = 0;
+    i = j = minOne = minTwo = prev = cur = 0;
     
     /* fill the input buffer */
     setBuf(fd, inBuff, bufPl);
@@ -132,24 +116,48 @@ static int gather_results(int fd, int *result[])/*#{{{*/
         getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n');
         sampNum = getInt(numStr, 0, "sampNum");
 
-        samples = (int*) malloc(sizeof(int)*sampNum);
+        /* save buff place */
+        svPl = bufPl;
 
-        /* fill the array of samples */
+        /* pull first sample from file */
+        getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n' && *bufPl != ' ');
+        highDiff = prev = getInt(numStr, 0, "prev");
+
+        /* executes method 1, gathers high difference */
+        --sampNum; /* prevVal holds the first sample */
         for(j = 0; j < sampNum; ++j)
         {
+            /* get next value in the buffer */
             getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n' && *bufPl != ' ');
-            samples[j] = getInt(numStr, 0, "cur");
+            cur = getInt(numStr, 0, "cur");
+            
+            /* gather the minimums */
+            minOne += method_one(prev, cur);
+            highDiff = high_diff(cur);
+
+            /* TODO: Need to finish method 2. I wanted to figure out how to do
+                     it without building an integer array to go through and
+                     find the highDiff in order to do method 2. 
+                     
+                     Previous and current technique worked well for method one 
+                     but i am having issues finding a way to obtain the highDiff 
+                     in such a way that i can only use prev/cur. So i should
+                     probably restructure for an array. Any algorithm i could
+                     think of to prevent using the array seems grossly
+                     inefficient */
+        
+            prev = cur;
         }
 
-        /* get the two minimums */
-        minOne = method_one(samples, sampNum);
-        minTwo = method_two(samples, sampNum);
-
+        /* if there was only 1 sample --; */
+        if(sampNum == 0){
+            minOne = prev;
+            minTwo = prev;
+        }
+        
         /* fill result */
         result[0][i] = minOne;
         result[1][i] = minTwo;
-
-        free(samples);
     }
 
     return numTests;

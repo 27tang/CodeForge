@@ -12,3 +12,4 @@
 | Rachael | earthshine0 | rheyob@pdx.edu |
 | sam | fiwd | sambrock@pdx.edu |
 |scott| sphon | sphon@pdx.edu| sea hawks |
+| Elijah | omswindles | ew4@pdx.edu | Go sports ball |

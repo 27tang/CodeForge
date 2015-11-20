@@ -11,3 +11,4 @@
 | RJ | RJ-Russell | rjr4@pdx.edu |
 | Rachael | earthshine0 | rheyob@pdx.edu |
 | sam | fiwd | sambrock@pdx.edu |
+|scott| sphon | sphon@pdx.edu|

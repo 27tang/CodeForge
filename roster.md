@@ -10,4 +10,4 @@
 | Rohan | THEhEROLocker | roh3@pdx.edu |
 | RJ | RJ-Russell | rjr4@pdx.edu |
 | Rachael | earthshine0 | rheyob@pdx.edu |
-|Scott |sphon|sphon@pdx.edu|
+| sam | fiwd | sambrock@pdx.edu |

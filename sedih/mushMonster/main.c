@@ -88,7 +88,7 @@ static int method_two(int *samples, int sampNum)/*#{{{*/
         if(prev < cur){
             min += prev;}
         else{
-            min += mps;}
+            min += (cur == 0 && prev < mps) ? prev : mps;}
 
         prev = cur;
     }

@@ -74,21 +74,20 @@ static int method_two(int *samples, int sampNum)/*#{{{*/
     for(i = 1; i < sampNum; ++i)
     {
         cur = samples[i];
-        if(prev > cur){
-        mps = ((prev - cur) > mps) ? (prev - cur) : mps;}
+        if(prev > cur && (prev - cur) > mps){
+        mps = prev - cur;}
 
         prev = cur;
     }
     
     /* find solution to method 2 */
-    prev = samples[0];
-    for(i = 1; i < sampNum; ++i)
+    for(i = 0; i < sampNum-1; ++i)
     {
-        cur = samples[i];
-        if(prev < cur){
+        prev = samples[i];
+        if(prev <= mps){
             min += prev;}
         else{
-            min += (cur == 0 && prev < mps) ? prev : mps;}
+            min += mps;}
 
         prev = cur;
     }

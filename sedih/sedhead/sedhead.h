@@ -51,7 +51,7 @@
     /* reset the input buffer after first allocation */
     #define setInputBuf(fd, buff, bfPl)                                        \
     {                                                                          \
-        alloc_buff(buff);                                                      \
+        allocInputbuff(buff);                                                      \
         bfPl = buff;                                                           \
     } 
 

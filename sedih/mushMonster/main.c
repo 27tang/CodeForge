@@ -1,4 +1,3 @@
-/* header for the mush problem */
 #define __SED_ERR__
 #define __SED_NUM__
 #define __SED_LINUX__

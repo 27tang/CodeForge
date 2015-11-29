@@ -1,0 +1,41 @@
+/* to try */
+So, my seems slow.
+
+I think it is from parsing through the buffer. I do not think i am handling
+the buffering as well as i could be, at least not as efficient as it could be.
+
+DO more research on how the general buffer works using STDIN.
+
+Also, try calling read more times instead of pulling large chunks and parsing 
+through it.
+
+It is possible the overhead of calling read multiple times, for example to pull
+each individual sample, is more efficient than actually pulling a large chunk
+and going through each of the index's in the buffer.
+
+I am not sure how i can actually do this tho since i do not know how big
+each number will actually be. I may still have to go through what i pulled
+and check it. I do not expect the sys calls to be faster in the user space,
+but i do thing i can do things better than i am. X's code goes very fast, so
+the STDIN is much more efficient than my implementation.... again do more
+research on STDIN. Is it an actual file? or is it just a stream?
+
+
+
+
+
+/* to try */
+1) Try rewriting the program to pull from STDIN instead of the actual file. 
+   Perhaps using STDIN is just plain faster than pulling directly from the
+   file.
+-This could potentially cause more read() operations
+-Will show the effects of stdout vs fileIO. Since i do not have to open and
+ close a file descriptor like i do when reading directly from the file, this
+ should cause some kind of increase... that may be unnoticable.
+
+2) Try increasing the buffer size to a large ammount, requiring less read()
+   operations. I am also not sure this will be signifigant or not.
+
+3) Try writing this without using system calls and without manually handling 
+   a input buffer using read(). How much slower is it? Is it slower at all? 
+   Am i fucking up if it is faster?

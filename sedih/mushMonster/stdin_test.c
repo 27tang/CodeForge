@@ -3,14 +3,14 @@
 #define __SED_LINUX__
 #include "../sedhead/sedhead.h"
 
-#define IN_BUF_ 4096
+#define IN_BUF_ 512
 #define TM_BUF_ 16
 
 /* allocate an input buffer with a '\0' terminatior at the end */
 #define alloc_buff(fd, buff)                                                   \
 {                                                                              \
     ssize_t _retBytes = 0;                                                     \
-    if((_retBytes = read(fd, (void*) buff, IN_BUF_-1)) == -1){                 \
+    if((_retBytes = read(STDIN_FILENO, (void*) buff, IN_BUF_-1)) == -1){       \
         errExit("alloc_buf(): read() failure");}                               \
     (_retBytes < IN_BUF_-1) ? (buff[_retBytes] = '\0')                         \
                             : (buff[IN_BUF_-1] = '\0');                        \
@@ -41,7 +41,7 @@
 } /* end getNumString */
 
 /* method 1 of the mushroom monster problem */
-static int method_one(int *Restrict samples, const int sampNum)/*#{{{*/
+static int method_one(int *Restrict samples, int sampNum)/*#{{{*/
 {
     int res  = 0;
     int prev = 0;
@@ -60,7 +60,7 @@ static int method_one(int *Restrict samples, const int sampNum)/*#{{{*/
 } /* end method_one #}}} */
 
 /* method 2 of the mushroom monster problem */
-static int method_two(int *Restrict samples, const int sampNum)/*#{{{*/
+static int method_two(int *Restrict samples, int sampNum)/*#{{{*/
 {
     int min  = 0;
     int mps  = 0; /* mushrooms per second */
@@ -97,7 +97,7 @@ static int method_two(int *Restrict samples, const int sampNum)/*#{{{*/
 
 /* executes method one and returns the results in an int corresponding
    to the result that will be printed. returns the samples min.*/
-static int gather_results(const int fd, int *result[])/*#{{{*/
+static int gather_results(int fd, int *result[])/*#{{{*/
 {
     int numTests = 0;   /* number of tests in file */
     int sampNum  = 0;   /* ammount of samples */
@@ -154,7 +154,7 @@ static int gather_results(const int fd, int *result[])/*#{{{*/
 } /* end gather_results #}}} */
 
 /* print the results of each method */
-static inline void display_results(int *result[], const int numTests)/*#{{{*/
+static inline void display_results(int *result[], int numTests)/*#{{{*/
 {
 #define TM_BF_  4096
     int i = 0;
@@ -172,28 +172,15 @@ static inline void display_results(int *result[], const int numTests)/*#{{{*/
 #undef TM_BF_
 } /* end display_results #}}} */
 
-int main(int argc, char *argv[])
+int main()
 {
     int *result[2] = {NULL};
     int numTests = 0;
     int fd       = 0;   /* file descriptor */
 
-    if(argc != 2){
-        noerrExit("CommandLine argument: invalid number of arguments\n$cmd path");}
-
-    /* open the sample file */
-    fd = open(argv[1], O_RDWR);
-    if(fd == -1){
-        errExit("gather_results: Opening file failed");}
-
     numTests = gather_results(fd, result);
     display_results(result, numTests);
     free_all(result[0], result[1]);
-
-    /* close the sample file */
-    if(close(fd) == -1){
-        errExit("gather_results: close() failure");}
-
     exit(EXIT_SUCCESS);
 }
 

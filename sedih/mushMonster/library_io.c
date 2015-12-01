@@ -3,7 +3,7 @@
 #define __SED_LINUX__
 #include "../sedhead/sedhead.h"
 
-#define IN_BUF_ 4096
+#define IN_BUF_ 512
 #define TM_BUF_ 16
 
 /* allocate an input buffer with a '\0' terminatior at the end */
@@ -41,7 +41,7 @@
 } /* end getNumString */
 
 /* method 1 of the mushroom monster problem */
-static int method_one(int *Restrict samples, const int sampNum)/*#{{{*/
+static int method_one(int *Restrict samples, int sampNum)/*#{{{*/
 {
     int res  = 0;
     int prev = 0;
@@ -60,7 +60,7 @@ static int method_one(int *Restrict samples, const int sampNum)/*#{{{*/
 } /* end method_one #}}} */
 
 /* method 2 of the mushroom monster problem */
-static int method_two(int *Restrict samples, const int sampNum)/*#{{{*/
+static int method_two(int *Restrict samples, int sampNum)/*#{{{*/
 {
     int min  = 0;
     int mps  = 0; /* mushrooms per second */
@@ -97,7 +97,7 @@ static int method_two(int *Restrict samples, const int sampNum)/*#{{{*/
 
 /* executes method one and returns the results in an int corresponding
    to the result that will be printed. returns the samples min.*/
-static int gather_results(const int fd, int *result[])/*#{{{*/
+static int gather_results(int fd, int *result[])/*#{{{*/
 {
     int numTests = 0;   /* number of tests in file */
     int sampNum  = 0;   /* ammount of samples */
@@ -154,7 +154,7 @@ static int gather_results(const int fd, int *result[])/*#{{{*/
 } /* end gather_results #}}} */
 
 /* print the results of each method */
-static inline void display_results(int *result[], const int numTests)/*#{{{*/
+static inline void display_results(int *result[], int numTests)/*#{{{*/
 {
 #define TM_BF_  4096
     int i = 0;

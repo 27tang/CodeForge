@@ -3,17 +3,17 @@
 #define __SED_LINUX__
 #include "../sedhead/sedhead.h"
 
-#define IN_BUF_ 4096
+#define IN_BUF_ 512
 #define TM_BUF_ 16
 
 /* allocate an input buffer with a '\0' terminatior at the end */
-#define alloc_buff(fd, buff)                                                   \
-{                                                                              \
-    ssize_t _retBytes = 0;                                                     \
-    if((_retBytes = read(fd, (void*) buff, IN_BUF_-1)) == -1){                 \
-        errExit("alloc_buf(): read() failure");}                               \
-    (_retBytes < IN_BUF_-1) ? (buff[_retBytes] = '\0')                         \
-                            : (buff[IN_BUF_-1] = '\0');                        \
+static inline void alloc_buff(int fd, char *Restrict buff)                              
+{                                                                              
+    ssize_t _retBytes = 0;                                                     
+    if((_retBytes = read(fd, (void*) buff, IN_BUF_-1)) == -1){                 
+        errExit("alloc_buf(): read() failure");}                               
+    (_retBytes < IN_BUF_-1) ? (buff[_retBytes] = '\0')                         
+                            : (buff[IN_BUF_-1] = '\0');                        
 } 
 
 /* reset the input buffer after first allocation */
@@ -24,24 +24,25 @@
 }
 
 /* get the number string from the input buffer */
-#define getNumString(fd, inBuf, bfPl, resStr, conditional)                     \
-{                                                                              \
-    int _TM_ = 0;                                                              \
-    for(_TM_ = 0; conditional; ++_TM_)                                         \
-    {                                                                          \
-        resStr[_TM_] = *bfPl;                                                  \
-        ++bfPl;                  /* increase buff placement */                 \
-        if(*bfPl == '\0'){ /* reached end of current buffer */                 \
-            setBuf(fd, inBuf, bfPl);}                                          \
-    } /* end for */                                                            \
-    ++bfPl;                                                                    \
-    resStr[_TM_] = '\0';                                                       \
-    if(*bfPl == '\0'){ /* reached end of current buffer */                     \
-        setBuf(fd, inBuf, bfPl);}                                              \
+static char* getNumString(int fd, char inBuf[], char *Restrict bfPl, char *Restrict resStr)            
+{                                                                              
+    int _TM_ = 0;                                                              
+    for(_TM_ = 0; *bfPl != '\n' && *bfPl != ' '; ++_TM_)                                         
+    {                                                                          
+        resStr[_TM_] = *bfPl;                                                  
+        ++bfPl;                  /* increase buff placement */                 
+        if(*bfPl == '\0'){ /* reached end of current buffer */                 
+            setBuf(fd, inBuf, bfPl);}                                          
+    } /* end for */                                                            
+    ++bfPl;                                                                    
+    resStr[_TM_] = '\0';                                                       
+    if(*bfPl == '\0'){ /* reached end of current buffer */                     
+        setBuf(fd, inBuf, bfPl);}                                              
+    return bfPl;
 } /* end getNumString */
 
 /* method 1 of the mushroom monster problem */
-static int method_one(int *Restrict samples, const int sampNum)/*#{{{*/
+static int method_one(int *Restrict samples, int sampNum)/*#{{{*/
 {
     int res  = 0;
     int prev = 0;
@@ -60,7 +61,7 @@ static int method_one(int *Restrict samples, const int sampNum)/*#{{{*/
 } /* end method_one #}}} */
 
 /* method 2 of the mushroom monster problem */
-static int method_two(int *Restrict samples, const int sampNum)/*#{{{*/
+static int method_two(int *Restrict samples, int sampNum)/*#{{{*/
 {
     int min  = 0;
     int mps  = 0; /* mushrooms per second */
@@ -97,7 +98,7 @@ static int method_two(int *Restrict samples, const int sampNum)/*#{{{*/
 
 /* executes method one and returns the results in an int corresponding
    to the result that will be printed. returns the samples min.*/
-static int gather_results(const int fd, int *result[])/*#{{{*/
+static int gather_results(int fd, int *result[])/*#{{{*/
 {
     int numTests = 0;   /* number of tests in file */
     int sampNum  = 0;   /* ammount of samples */
@@ -114,7 +115,7 @@ static int gather_results(const int fd, int *result[])/*#{{{*/
     setBuf(fd, inBuff, bufPl);
     
     /* get number of tests */
-    getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n');
+    bufPl = getNumString(fd, inBuff, bufPl, numStr);
     numTests = getInt(numStr, 0, "numTests");
 
     /* allocate room for method 1 and method two results */
@@ -127,7 +128,7 @@ static int gather_results(const int fd, int *result[])/*#{{{*/
         minTwo = 0;
 
         /* get input from #of samples */
-        getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n');
+        bufPl = getNumString(fd, inBuff, bufPl, numStr);
         sampNum = getInt(numStr, 0, "sampNum");
 
         samples = (int*) malloc(sizeof(int)*sampNum);
@@ -135,7 +136,7 @@ static int gather_results(const int fd, int *result[])/*#{{{*/
         /* fill the array of samples */
         for(j = 0; j < sampNum; ++j)
         {
-            getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n' && *bufPl != ' ');
+            bufPl = getNumString(fd, inBuff, bufPl, numStr);
             samples[j] = getInt(numStr, 0, "cur");
         }
 
@@ -154,7 +155,7 @@ static int gather_results(const int fd, int *result[])/*#{{{*/
 } /* end gather_results #}}} */
 
 /* print the results of each method */
-static inline void display_results(int *result[], const int numTests)/*#{{{*/
+static inline void display_results(int *result[], int numTests)/*#{{{*/
 {
 #define TM_BF_  4096
     int i = 0;

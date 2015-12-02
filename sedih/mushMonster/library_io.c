@@ -1,44 +1,44 @@
+ NOT STARTED NOT STARTED NOT STARTED */
+
+
 #define __SED_ERR__
 #define __SED_NUM__
 #define __SED_LINUX__
 #include "../sedhead/sedhead.h"
 
-#define IN_BUF_ 512
-#define TM_BUF_ 16
+#define IN_BUF_ 50
 
-/* allocate an input buffer with a '\0' terminatior at the end */
-#define alloc_buff(fd, buff)                                                   \
+/* takes in the input, an array to fill with resulting samples.
+   inbuff = input
+   resSamples = results of samples into integers
+   numSamples = number of samples
+   delimString = delimiter string used in strTok */
+/* TODO: I need to realloc the buffer if failure. The things required for this
+         are inside getLineInput, we need the bytes read, and need to read
+         from that point.
+         Maybe fread is actually the way to go if i dont know the length of 
+         something but i know i need all of it. */
+#define get_samples(file, inBuff, resSamples, numSamples, delimString)         \
 {                                                                              \
-    ssize_t _retBytes = 0;                                                     \
-    if((_retBytes = read(fd, (void*) buff, IN_BUF_-1)) == -1){                 \
-        errExit("alloc_buf(): read() failure");}                               \
-    (_retBytes < IN_BUF_-1) ? (buff[_retBytes] = '\0')                         \
-                            : (buff[IN_BUF_-1] = '\0');                        \
-} 
-
-/* reset the input buffer after first allocation */
-#define setBuf(fd, buff, bfPl)                                                 \
-{                                                                              \
-    alloc_buff(fd, buff);                                                      \
-    bfPl = buff;                                                               \
-}
-
-/* get the number string from the input buffer */
-#define getNumString(fd, inBuf, bfPl, resStr, conditional)                     \
-{                                                                              \
-    int _TM_ = 0;                                                              \
-    for(_TM_ = 0; conditional; ++_TM_)                                         \
+    int _J = 0;                                                                \
+    char *_TMP_ = NULL;                                                        \
+    getLineInput(inBuff, IN_BUF_, stdin, inLen);                               \
+    /* initiate strtok with buffer */                                          \
+    _TMP_ = strtok(inBuff, delimString);                                       \
+    resSamples[0] = getInt(_TMP_, 0, "_TMP_");                                 \
+    for(_J = 1; _J < numSamples; ++_J)                                         \
     {                                                                          \
-        resStr[_TM_] = *bfPl;                                                  \
-        ++bfPl;                  /* increase buff placement */                 \
-        if(*bfPl == '\0'){ /* reached end of current buffer */                 \
-            setBuf(fd, inBuf, bfPl);}                                          \
-    } /* end for */                                                            \
-    ++bfPl;                                                                    \
-    resStr[_TM_] = '\0';                                                       \
-    if(*bfPl == '\0'){ /* reached end of current buffer */                     \
-        setBuf(fd, inBuf, bfPl);}                                              \
-} /* end getNumString */
+        _TMP_ = strtok((char*)NULL, delimString);                              \
+        if(_TMP_ == NULL && inBuff[inLen] != '\0')                             \
+        {                                                                      \
+            getLineInput(inBuff, IN_BUF_, stdin, inLen);                       \
+            _TMP_ = strtok(inBuff, delimString);                               \
+            resSamples[_J] = getInt(_TMP_, 0, "_TMP_");                        \
+        }                                                                      \
+        else{                                                                  \
+        resSamples[_J] = getInt(_TMP_, 0, "resSamples");}                      \
+    }                                                                          \
+} /* end get_samples */
 
 /* method 1 of the mushroom monster problem */
 static int method_one(int *Restrict samples, int sampNum)/*#{{{*/
@@ -94,32 +94,29 @@ static int method_two(int *Restrict samples, int sampNum)/*#{{{*/
     return min;
 }/* end #}}} */
 
-
 /* executes method one and returns the results in an int corresponding
    to the result that will be printed. returns the samples min.*/
-static int gather_results(int fd, int *result[])/*#{{{*/
+static int gather_results(int *result[])/*#{{{*/
 {
     int numTests = 0;   /* number of tests in file */
     int sampNum  = 0;   /* ammount of samples */
     int minOne, minTwo; /* method 1/2 current min */
-    int i, j;           /* increments */
+    int i;              /* increments */
+    int inLen;          /* length of string w/o '\0/' */
     int *samples = NULL;/* the given sampNum of samples */
 
-    char *bufPl = NULL;            /* current place in input buffer */
-    char inBuff[IN_BUF_] = {'\0'}; /* input buffer */
-    char numStr[TM_BUF_] = {'\0'}; /* string to be converted */
-    i = j = minOne = minTwo = 0;
-    
-    /* fill the input buffer */
-    setBuf(fd, inBuff, bufPl);
+    char *inBuff = NULL;/* input buffer */
+    i = minOne = minTwo = inLen = 0;
     
     /* get number of tests */
-    getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n');
-    numTests = getInt(numStr, 0, "numTests");
+    getLineInput(inBuff, IN_BUF_, stdin, inLen);
+    numTests = getInt(inBuff, 0, "numTests");
 
     /* allocate room for method 1 and method two results */
     result[0] = (int*) malloc(sizeof(int)*numTests);
     result[1] = (int*) malloc(sizeof(int)*numTests);
+    if(result[0] == NULL || result[1] == NULL){
+        errExit("gather_results: allocation failure for result");}
 
     for(i = 0; i < numTests; ++i)
     {
@@ -127,17 +124,15 @@ static int gather_results(int fd, int *result[])/*#{{{*/
         minTwo = 0;
 
         /* get input from #of samples */
-        getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n');
-        sampNum = getInt(numStr, 0, "sampNum");
+        getLineInput(inBuff, IN_BUF_, stdin, inLen);
+        sampNum = getInt(inBuff, 0, "sampNum");
 
         samples = (int*) malloc(sizeof(int)*sampNum);
+        if(result[0] == NULL || result[1] == NULL){
+            errExit("gather_results: allocation failure for samples");}
 
         /* fill the array of samples */
-        for(j = 0; j < sampNum; ++j)
-        {
-            getNumString(fd, inBuff, bufPl, numStr, *bufPl != '\n' && *bufPl != ' ');
-            samples[j] = getInt(numStr, 0, "cur");
-        }
+        get_samples(inBuff, samples, sampNum, " ")
 
         /* get the two minimums */
         minOne = method_one(samples, sampNum);
@@ -149,6 +144,8 @@ static int gather_results(int fd, int *result[])/*#{{{*/
 
         free(samples);
     }
+
+    free(inBuff);
 
     return numTests;
 } /* end gather_results #}}} */
@@ -172,27 +169,16 @@ static inline void display_results(int *result[], int numTests)/*#{{{*/
 #undef TM_BF_
 } /* end display_results #}}} */
 
-int main(int argc, char *argv[])
+int main()
 {
     int *result[2] = {NULL};
     int numTests = 0;
-    int fd       = 0;   /* file descriptor */
 
-    if(argc != 2){
-        noerrExit("CommandLine argument: invalid number of arguments\n$cmd path");}
-
-    /* open the sample file */
-    fd = open(argv[1], O_RDWR);
-    if(fd == -1){
-        errExit("gather_results: Opening file failed");}
-
-    numTests = gather_results(fd, result);
+    numTests = gather_results(result);
     display_results(result, numTests);
-    free_all(result[0], result[1]);
-
-    /* close the sample file */
-    if(close(fd) == -1){
-        errExit("gather_results: close() failure");}
+    //free_all(result[0], result[1]);
+    free(result[0]);
+    free(result[1]);
 
     exit(EXIT_SUCCESS);
 }

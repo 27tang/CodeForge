@@ -3,24 +3,48 @@
 #define __SED_LINUX__
 #include "../sedhead/sedhead.h"
 
-#define IN_BUF_ 50
+#define IN_BUF_ 8192 /* If this buffer is too small it will not work because i
+                        do not have a resolution for when the length of the
+                        line is larger than the buffer size. Fgets() was the
+                        chosen library function for this inconjunction with
+                        strtok(). 
 
-/* get the number string from the input buffer */
-#define getNumString(fd, inBuf, bfPl, resStr, conditional)                     \
+                        This issue is not a problem with the fread/fwrite
+                        method and manually going through the buffer becuase
+                        there was more control over handling the refilling of
+                        the buffer. I think that using fgets would be fine, but
+                        using strtok in this manner is the problem, but also
+                        what prevents me from manually going through each string.
+                        I am not sure if there is a better library function to
+                        fit my needs in conjunction with fgets().
+
+                        see library_io.c for a file io version with fread and
+                        fwrite. */
+
+/* takes in the input, an array to fill with resulting samples.
+   inbuff = input
+   resSamples = results of samples into integers
+   numSamples = number of samples
+   delimString = delimiter string used in strTok */
+/* TODO: I need to realloc the buffer if failure. The things required for this
+         are inside getLineInput, we need the bytes read, and need to read
+         from that point.
+         Maybe fread is actually the way to go if i dont know the length of 
+         something but i know i need all of it. */
+#define get_samples(inBuff, resSamples, numSamples, delimString, inLen)        \
 {                                                                              \
-    int _TM_ = 0;                                                              \
-    for(_TM_ = 0; conditional; ++_TM_)                                         \
+    int _J = 0;                                                                \
+    char *_TMP_ = NULL;                                                        \
+    getLineInput_noClear(inBuff, IN_BUF_, stdin, inLen);                       \
+    /* initiate strtok with buffer */                                          \
+    _TMP_ = strtok(inBuff, delimString);                                       \
+    resSamples[0] = getInt(_TMP_, 0, "resSamples0");                           \
+    for(_J = 1; _J < numSamples; ++_J)                                         \
     {                                                                          \
-        resStr[_TM_] = *bfPl;                                                  \
-        ++bfPl;                  /* increase buff placement */                 \
-        if(*bfPl == '\0'){ /* reached end of current buffer */                 \
-            setBuf(fd, inBuf, bfPl);}                                          \
-    } /* end for */                                                            \
-    ++bfPl;                                                                    \
-    resStr[_TM_] = '\0';                                                       \
-    if(*bfPl == '\0'){ /* reached end of current buffer */                     \
-        setBuf(fd, inBuf, bfPl);}                                              \
-} /* end getNumString */
+        _TMP_ = strtok((char*)NULL, delimString);                              \
+        resSamples[_J] = getInt(_TMP_, 0, "resSamples1");                      \
+    }                                                                          \
+} /* end get_samples */
 
 /* method 1 of the mushroom monster problem */
 static int method_one(int *Restrict samples, int sampNum)/*#{{{*/
@@ -76,7 +100,6 @@ static int method_two(int *Restrict samples, int sampNum)/*#{{{*/
     return min;
 }/* end #}}} */
 
-
 /* executes method one and returns the results in an int corresponding
    to the result that will be printed. returns the samples min.*/
 static int gather_results(int *result[])/*#{{{*/
@@ -84,12 +107,12 @@ static int gather_results(int *result[])/*#{{{*/
     int numTests = 0;   /* number of tests in file */
     int sampNum  = 0;   /* ammount of samples */
     int minOne, minTwo; /* method 1/2 current min */
-    int i, j;           /* increments */
+    int i;              /* increments */
     int inLen;          /* length of string w/o '\0/' */
     int *samples = NULL;/* the given sampNum of samples */
 
     char *inBuff = NULL;/* input buffer */
-    i = j = minOne = minTwo = inLen = 0;
+    i = minOne = minTwo = inLen = 0;
     
     /* get number of tests */
     getLineInput(inBuff, IN_BUF_, stdin, inLen);
@@ -98,6 +121,8 @@ static int gather_results(int *result[])/*#{{{*/
     /* allocate room for method 1 and method two results */
     result[0] = (int*) malloc(sizeof(int)*numTests);
     result[1] = (int*) malloc(sizeof(int)*numTests);
+    if(result[0] == NULL || result[1] == NULL){
+        errExit("gather_results: allocation failure for result");}
 
     for(i = 0; i < numTests; ++i)
     {
@@ -109,14 +134,11 @@ static int gather_results(int *result[])/*#{{{*/
         sampNum = getInt(inBuff, 0, "sampNum");
 
         samples = (int*) malloc(sizeof(int)*sampNum);
+        if(result[0] == NULL || result[1] == NULL){
+            errExit("gather_results: allocation failure for samples");}
 
         /* fill the array of samples */
-        for(j = 0; j < sampNum; ++j)
-        {
-            getLineInput(inBuff, IN_BUF_, stdin, inLen);
-            parseBuffDelim();
-            samples[j] = getInt(inBuff, 0, "cur");
-        }
+        get_samples(inBuff, samples, sampNum, " ", inLen);
 
         /* get the two minimums */
         minOne = method_one(samples, sampNum);
@@ -160,9 +182,7 @@ int main()
 
     numTests = gather_results(result);
     display_results(result, numTests);
-    //free_all(result[0], result[1]);
-    free(result[0]);
-    free(result[1]);
+    free_all(result[0], result[1]);
 
     exit(EXIT_SUCCESS);
 }

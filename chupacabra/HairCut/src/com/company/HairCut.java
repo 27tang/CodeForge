@@ -2,7 +2,6 @@ package com.company;
 
 import java.io.BufferedReader;
 import java.io.FileReader;
-import java.util.Arrays;
 
 public class HairCut {
         static int numTests = 0;
@@ -17,7 +16,7 @@ public class HairCut {
         numTests = Integer.parseInt(in.readLine());
 
         int count = 1;
-        while(count <= numTests) {//(line = in.readLine()) != null) {
+        while(count <= numTests) {
             int totalTime = 0;
             int barber = 0;
 
@@ -40,9 +39,5 @@ public class HairCut {
             System.out.println(barber);
             ++count;
         }
-    }
-
-    public static void calculateTime() {
-
     }
 }

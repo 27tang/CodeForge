@@ -27,7 +27,7 @@ public class fileReader {
         return fileData;
     }
 
-    public int countLines() throws IOException {
+    private int countLines() throws IOException {
         InputStream is = new BufferedInputStream(new FileInputStream(filePath));
         try {
             byte[] c = new byte[1024];

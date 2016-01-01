@@ -1,15 +1,14 @@
 package com.company;
 
-/**
- * Created by hERO on 12/31/15.
- */
+/*
+  Created by hERO on 12/31/15.
+*/
 
 import java.io.IOException;
 
 public class Main {
 
     public static void main(String[] args) {
-	// write your code here
         String test = new String(args[0]);
         fileReader myReader = new fileReader(test);
         String[] fileData = null;
@@ -22,11 +21,14 @@ public class Main {
             System.out.println(badStuffHappened.getMessage());
         }
 
+        SmartGuy RohanElukurthy = new SmartGuy(fileData);
+        RohanElukurthy.calculateMyAnswer();
+
+
+
         /*for (String s: fileData) {
             System.out.println(s);
         }*/
-
-        int numberOfLinesInFile = fileData.length;
 
     }
 }

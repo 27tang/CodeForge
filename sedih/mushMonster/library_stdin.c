@@ -13,10 +13,12 @@
                         method and manually going through the buffer becuase
                         there was more control over handling the refilling of
                         the buffer. I think that using fgets would be fine, but
-                        using strtok in this manner is the problem, but also
+                        using strtok in this manner is the problem. It also
                         what prevents me from manually going through each string.
                         I am not sure if there is a better library function to
-                        fit my needs in conjunction with fgets().
+                        fit my needs in conjunction with fgets(). Perhaps going
+                        though the string manually is the way to go in most
+                        cases. At least in my experience.
 
                         see library_io.c for a file io version with fread and
                         fwrite. */

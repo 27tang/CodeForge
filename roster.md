@@ -17,3 +17,4 @@
 | Rudd | --- | --- | |
 | Justin | --- | --- | |
 | Shawn | --- | --- | |
+| Jackie | jiaqiluo | jiaqluo@pdx.edu ||

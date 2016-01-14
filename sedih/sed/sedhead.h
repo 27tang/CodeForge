@@ -364,7 +364,7 @@
 #define create_mask(start, end, resMask)                                       \
 {                                                                              \
     int __INC_ = 0;                                                            \
-    if((start) > (end)){                                                       \
+    if((start) < (end)){                                                       \
         errmsg("create_mask: start > end, no mask was generated.");}           \
                                                                                \
     resMask = 0; /* just to make sure im not an idiot when i call this */      \

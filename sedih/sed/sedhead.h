@@ -48,7 +48,7 @@
        - buff  == char* , Buffer to be filled with character data from fd.
        - nbyte == size_t, number of bytes to read, including room for '\0'. 
                         (typically the size of buffer array) */
-    #define readInput(fd, buff, nByte)                                         \
+    #define READ_INPUT(fd, buff, nByte)                                        \
     {                                                                          \
         ssize_t _retBytes = 0;                                                 \
         --nByte; /* leave room for '\0' */                                     \
@@ -57,7 +57,7 @@
         (_retBytes < nByte) ? (buff[_retBytes] = '\0')                         \
                                 : (buff[nByte] = '\0');                        \
         ++nByte; /* set nByte back to original value */                        \
-    } /* end readInput */
+    } /* end READ_INPUT */
 
     /* Copy a variable ammount of characters from a buffer based on a given 
        position.
@@ -72,7 +72,7 @@
                         (typically the size of buffer array)
        - conditional == The conditionals desired in the copy process.
                       Example: inBuf[i] != ' ' && inBuf[i] != '\n' */
-    #define read_nextFullFile(fd, inBuf, bfPl, nByte, resStr, conditional)     \
+    #define READ_NEXT_FILE(fd, inBuf, bfPl, nByte, resStr, conditional)        \
     {                                                                          \
         int _TM_ = 0;                                                          \
         assert(resStr != NULL && bfPl != NULL && inBuf != NULL);               \
@@ -82,7 +82,7 @@
             ++bfPl;                  /* increase buff placement */             \
             if(*bfPl == '\0')                                                  \
             {   /* reached end of current buffer */                            \
-                readInput(fd, inBuf, nByte);                                   \
+                READ_INPUT(fd, inBuf, nByte);                                  \
                 bfPl = inBuf;                                                  \
             }                                                                  \
         } /* end for */                                                        \
@@ -90,7 +90,7 @@
         resStr[_TM_] = '\0';                                                   \
         if(*bfPl == '\0')                                                      \
         {   /* reached end of current buffer */                                \
-            readInput(fd, inBuf, nByte);                                       \
+            READ_INPUT(fd, inBuf, nByte);                                      \
             bfPl = inBuf;                                                      \
         }                                                                      \
     } /* end readBuff_strRet */
@@ -101,10 +101,10 @@
 #define _LIL_FL_CONSTS__
 /* Use memcpy to set a float value, causing the proper value to appear instead
    of the min/max. (example: Nan, -Nan, etc.), (memset gives improper results) */
-#define set_float(num, set)    memcpy(&num, &set, sizeof(num))
-#define set_double(num, set)   set_float(num,set)
-#define set_nan(num, set)      set_float(num, set)
-#define set_inf(num, set)      set_float(num,set)
+#define SET_FLOAT(num, set)    memcpy(&num, &set, sizeof(num))
+#define SET_DOUBLE(num, set)   SET_FLOAT(num,set)
+#define SET_NAN(num, set)      SET_FLOAT(num, set)
+#define SET_INF(num, set)      SET_FLOAT(num,set)
 
 /* Use these definitions placed in memory for the above macros in set.
    example: int32_t fnan = PF_NAN;
@@ -146,35 +146,35 @@
 #endif
 
                     /* min/max */
-#define min(m,n) ((m) < (n) ? (m) : (n))
-#define max(m,n) ((m) > (n) ? (m) : (n))
+#define MIN(m,n) ((m) < (n) ? (m) : (n))
+#define MAX(m,n) ((m) > (n) ? (m) : (n))
 
                     /* input */
 
 /* clears the input buffer using variable char ch; and getchar ().*/
-#define clear_stdin()                                                          \
+#define CLEAR_STDIN()                                                          \
 {                                                                              \
     char _CH_ = '\0';                                                          \
     while((_CH_ = getchar()) != '\n' && _CH_ != EOF);                          \
-} /* end clear_stdin */
+} /* end CLEAR_STDIN */
 
 /* Get 1 character from stdin using getchar, clears input buffer.
    - input == char , catches char from getchar(). */
-#define getChar(input)                                                         \
+#define GET_CHAR(input)                                                        \
 {                                                                              \
     if(((input) = getchar()) != '\n'){                                         \
-        clear_stdin();}                                                        \
-} /* end getChar */
+        CLEAR_STDIN();}                                                        \
+} /* end GET_CHAR */
 
 /* Get a single character from stdin and loop untill input is correct. 
    NOTE: > sets the single character to a capital letter.
-         > uses the above macro getChar(input), not getchar from the standard
+         > uses the above macro GET_CHAR(input), not getchar from the standard
            lib. 
-           TODO: I will consider changing getChars name in the future
+           TODO: I will consider changing GET_CHARs name in the future
    - input  == char , string to check for Y/N.
    - string == char*, message to print to the user via printf();.
    - ...    == ending variable length arguments placed in printf(string,...);. */
-#define yesNo(input, string, ...)                                              \
+#define YES_NO(input, string, ...)                                             \
 {                                                                              \
     /* TODO: Find out what happens with a statment like the following:         \
              assert("Some literal string" != NULL);                            \
@@ -182,10 +182,10 @@
     do                                                                         \
     {                                                                          \
         printf((string), __VA_ARGS__);                                         \
-        getChar(input);                                                        \
+        GET_CHAR(input);                                                       \
         (input) = toupper((input));                                            \
     }while(input != 'Y' && input != 'N');                                      \
-} /* end getChar_check #}}} */
+} /* end YES_NO #}}} */
 
 /* Get a line of input from a buffer.
    Clears the buffer if required. 
@@ -195,7 +195,7 @@
    - max      == int   , Max number of bytes to take in from file. 
    - filePntr == FILE* , the file pointer associated with the proper FD. 
    - inlen    == size_t, the length of the string WITHOUT the '\0' value. */
-#define fgetsInput(input, max, filePntr, inLen)                                \
+#define FGETS_INPUT(input, max, filePntr, inLen)                               \
 {                                                                              \
     assert(input != NULL && filePntr != NULL);                                 \
     memset((input), '\0', max);                                                \
@@ -204,7 +204,7 @@
     if(input[(inLen)] == '\n'){                                                \
         input[(inLen)] = '\0';}                                                \
     else{                                                                      \
-        clear_stdin(); }                                                       \
+        CLEAR_STDIN(); }                                                       \
 } /* end lineInput */
 
 /* Get a line of input from a buffer.
@@ -215,7 +215,7 @@
    - max      == int   , Max number of bytes to take in from file. 
    - filePntr == FILE* , the file pointer associated with the proper FD. 
    - inlen    == size_t, the length of the string WITHOUT the '\0' value. */
-#define fgetsInput_noClear(input, max, filePntr, inLen)                        \
+#define FGETS_NOCLR(input, max, filePntr, inLen)                               \
 {                                                                              \
     assert(input != NULL && filePntr != NULL);                                 \
     memset((input), '\0', max);                                                \
@@ -234,7 +234,7 @@
    - max      == int   , Max number of bytes to take in from file. 
    - filePntr == FILE* , the file pointer associated with the proper FD. 
    - inlen    == size_t, the length of the string WITHOUT the '\0' value. */
-#define fgetsInput_noClear_withNline(input, max, filePntr)                     \
+#define FGETS_NOCLR_NLINE(input, max, filePntr)                                \
 {                                                                              \
     assert(input != NULL && filePntr != NULL);                                 \
     memset((input), '\0', max);                                                \
@@ -247,13 +247,13 @@
    Checks for eof and errors after fread is called.
    Does not place a null value, data is not garunteed as a char. 
    If a terminating null is required, leave room in buff and manually add it
-   after the call to freadInput().
+   after the call to FREAD_INPUT().
    Does not clear the input buffer.
    - buff == void*, buffer to place nmemb elements into
    - dataSize == size_t, size of the binary data being read from stream.
    - nmemb == size_t, number of items of dataSize to be read from fsteam.
    - fstream == FILE*, file pointer of input stream.*/
-#define freadInput(buff, dataSize, nmemb, fstream)                             \
+#define FREAD_INPUT(buff, dataSize, nmemb, fstream)                            \
 {                                                                              \
         assert(buff != NULL && fstream != NULL);                               \
         if(fread(buff, dataSize, nmemb, fstream) < nmemb)                      \
@@ -280,7 +280,7 @@
     - resStr      == char* , buffer to copy to.
     - conditional == The conditionals desired in the copy process.
                      Example: inBuf[i] != ' ' && inBuf[i] != '\n' */
-#define fgets_nextFullLine(filePntr, inBuf, max, bfPl, resStr, conditional)\
+#define FGETS_NEXT_LINE(filePntr, inBuf, max, bfPl, resStr, conditional)\
 {                                                                              \
     int _TM_ = 0;                                                              \
     assert(filePntr != NULL && resStr != NULL && bfPl != NULL && inBuf != NULL);\
@@ -290,7 +290,7 @@
         ++bfPl;                  /* increase buff placement */                 \
         if(*bfPl == '\0' && filePntr != stdin)                                 \
         {   /* set buffer */                                                   \
-            fgetsInput_noClear_withNline(inBuf, max, filePntr);                \
+            FGETS_NOCLR_NLINE(inBuf, max, filePntr);                           \
             bfPl = inBuf;                                                      \
         }                                                                      \
     } /* end for */                                                            \
@@ -298,10 +298,10 @@
     resStr[_TM_] = '\0';                                                       \
     if(*bfPl == '\0' && filePntr != stdin && *bfPl != '\n')                    \
     {   /* set buffer */                                                       \
-        fgetsInput_noClear_withNline(inBuf, max, filePntr);                    \
+        FGETS_NOCLR_NLINE(inBuf, max, filePntr);                               \
         bfPl = inBuf;                                                          \
     }                                                                          \
-}
+} /* end FGETS_NEXT_LINE */
 
 /*  Copy a variable ammount of characters from a buffer based on a given 
     position.
@@ -318,7 +318,7 @@
     - resStr      == char*, buffer to copy to.
     - conditional == The conditionals desired in the copy process.
                      Example: inBuf[i] != ' ' && inBuf[i] != '\n' */
-#define fread_nextFullFile(filePntr, inBuf, dataSize, nmemb, bfPl, resStr, conditional)\
+#define FREAD_NEXT_FILE(filePntr, inBuf, dataSize, nmemb, bfPl, resStr, conditional)\
 {                                                                              \
     int _TM_ = 0;                                                              \
     assert(filePntr != NULL && resStr != NULL && bfPl != NULL && inBuf != NULL);\
@@ -328,7 +328,7 @@
         ++bfPl;                  /* increase buff placement */                 \
         if(*bfPl == '\0' && filePntr != stdin)                                 \
         {   /* set buffer */                                                   \
-            freadInput(inBuf, dataSize, nmemb, filePntr);                      \
+            FREAD_INPUT(inBuf, dataSize, nmemb, filePntr);                      \
             bfPl = inBuf;                                                      \
         }                                                                      \
     } /* end for */                                                            \
@@ -336,7 +336,7 @@
     resStr[_TM_] = '\0';                                                       \
     if(*bfPl == '\0' && filePntr != stdin)                                     \
     {   /* set buffer */                                                       \
-        freadInput(inBuf, dataSize, nmemb, filePntr);                          \
+        FREAD_INPUT(inBuf, dataSize, nmemb, filePntr);                         \
         bfPl = inBuf;                                                          \
     }                                                                          \
 }
@@ -349,7 +349,7 @@
    - String, char*  == string to be resized.
    - len   , size_t == length of string not including terminating '\0'.
    - res   , char*  == resulting character pointer. */
-#define resize_string(string, len, res)                                        \
+#define SIZE_STRING(string, len, res)                                          \
 {                                                                              \
     assert(string != NULL);                                                    \
     if(res == NULL){                                                           \
@@ -361,7 +361,7 @@
    - start   == int, Which bit from bit 0 to start the mask.
    - end     == int, Which bit greater than start to end the mask.
    - resMask == int, Where the resulting bit mask will be placed */
-#define create_mask(start, end, resMask)                                       \
+#define CREATE_MASK(start, end, resMask)                                       \
 {                                                                              \
     int __INC_ = 0;                                                            \
     if((start) < (end)){                                                       \
@@ -370,13 +370,13 @@
     resMask = 0; /* just to make sure im not an idiot when i call this */      \
     for(__INC_ = (start); __INC_ <= (end); ++__INC_){                          \
         (resMask) |= 1 << __INC_;}                                             \
-} /* end create_mask */
+} /* end CREATE_MASK */
 
 /* Adds all the ascii values in a character array together.
    - array == char*, String to be added together.                              
    - size  == size_t, size of the string.                                      
    - res   == int, resulting sum of the string. */
-#define sumChars(array, size, res)                                             \
+#define SUM_CHARS(array, size, res)                                            \
 {                                                                              \
     int I_NC = 0;                                                              \
     if(array != NULL)                                                          \
@@ -384,7 +384,7 @@
         for(I_NC = 0; I_NC < (size), ++I_NC){                                  \
             (res) += (array[I_NC]);}                                           \
     }                                                                          \
-} /* end sumChars */
+} /* end SUM_CHARS */
 
 /* TODO: Adjust this macro or make an alternate that can call a function with
          variable arguments, rather than just one argument. (i.e. free(pntr);) */
@@ -393,7 +393,7 @@
    -... is a variable argument list.
    -will execute every argument into the function.
    -funct only takes in one argument. */
-#define apply_funct(type, funct, ...)                                          \
+#define APPLY_FUNCT(type, funct, ...)                                          \
 {                                                                              \
     void *stopper = (int[]){0};                                                \
     type **apply_list = (type*[]){__VA_ARGS__, stopper};                       \
@@ -405,5 +405,5 @@
     
 /* apply free to every pointer given in the argument list using the
    apply_funct macro */
-#define free_all(...)   apply_funct(void, free, __VA_ARGS__)
+#define FREE_ALL(...)   apply_funct(void, free, __VA_ARGS__)
 #endif

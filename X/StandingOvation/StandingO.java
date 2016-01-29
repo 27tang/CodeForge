@@ -19,9 +19,10 @@ public class StandingO {
         if(n > 0){
           if(j > attendence) {
             friendsToAdd += j - attendence;
-
+            //System.out.println("FRIENDSTOADD: " + friendsToAdd);
             attendence += j - attendence;
             attendence += n;
+            //System.out.println("ATTENDNCE: " + attendence);
           } else {
             attendence += n;
           }

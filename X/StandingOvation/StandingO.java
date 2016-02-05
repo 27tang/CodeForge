@@ -20,12 +20,15 @@ public class StandingO {
           if(j > attendence) {
             friendsToAdd += j - attendence;
             //System.out.println("FRIENDSTOADD: " + friendsToAdd);
-            attendence += j - attendence;
-            attendence += n;
+            //attendence += j - attendence;
+            //attendence += n;
             //System.out.println("ATTENDNCE: " + attendence);
-          } else {
-            attendence += n;
+          
+            attendence = j;
           }
+
+          attendence += n;
+         
         }
       
       }

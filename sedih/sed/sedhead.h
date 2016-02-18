@@ -87,7 +87,6 @@
             }                                                                  \
         } /* end for */                                                        \
         ++bfPl;                                                                \
-        resStr[_TM_] = '\0';                                                   \
         if(*bfPl == '\0')                                                      \
         {   /* reached end of current buffer */                                \
             READ_INPUT(fd, inBuf, nByte);                                      \
@@ -283,6 +282,7 @@
 #define FGETS_NEXT_LINE(filePntr, inBuf, max, bfPl, resStr, conditional)\
 {                                                                              \
     int _TM_ = 0;                                                              \
+    Bool _EOL = false; /* end of line flag */                                  \
     assert(filePntr != NULL && resStr != NULL && bfPl != NULL && inBuf != NULL);\
     for(_TM_ = 0; conditional; ++_TM_)                                         \
     {                                                                          \
@@ -292,15 +292,22 @@
         {   /* set buffer */                                                   \
             FGETS_NOCLR_NLINE(inBuf, max, filePntr);                           \
             bfPl = inBuf;                                                      \
-        }                                                                      \
+        } /* end if */                                                         \
     } /* end for */                                                            \
-    ++bfPl;                                                                    \
-    resStr[_TM_] = '\0';                                                       \
-    if(*bfPl == '\0' && filePntr != stdin && *bfPl != '\n')                    \
+                                                                               \
+    if(*bfPl == '\n'){                                                         \
+        _EOL = true;} /* end if */                                             \
+                                                                               \
+    ++bfPl; /* move 1 char passed delim conditional */                         \
+                                                                               \
+    if(*bfPl == '\0' && _EOL == false && filePntr != stdin)                    \
     {   /* set buffer */                                                       \
         FGETS_NOCLR_NLINE(inBuf, max, filePntr);                               \
         bfPl = inBuf;                                                          \
-    }                                                                          \
+    } /* end if */                                                             \
+                                                                               \
+    resStr[_TM_] = '\0';                                                       \
+    _EOL = false;                                                              \
 } /* end FGETS_NEXT_LINE */
 
 /*  Copy a variable ammount of characters from a buffer based on a given 
@@ -328,7 +335,7 @@
         ++bfPl;                  /* increase buff placement */                 \
         if(*bfPl == '\0' && filePntr != stdin)                                 \
         {   /* set buffer */                                                   \
-            FREAD_INPUT(inBuf, dataSize, nmemb, filePntr);                      \
+            FREAD_INPUT(inBuf, dataSize, nmemb, filePntr);                     \
             bfPl = inBuf;                                                      \
         }                                                                      \
     } /* end for */                                                            \
@@ -405,5 +412,5 @@
     
 /* apply free to every pointer given in the argument list using the
    apply_funct macro */
-#define FREE_ALL(...)   apply_funct(void, free, __VA_ARGS__)
+#define FREE_ALL(...)   APPLY_FUNCT(void, free, __VA_ARGS__)
 #endif

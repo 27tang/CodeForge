@@ -28,14 +28,13 @@ int main(int argc, char *argv[])
         {
             in_file >> num_plates;
             in_file.ignore(100, '\n');
-            
             plates = new int[num_plates];
-            
+
             for(int i = 0; i < num_plates; ++i)
             {
                 in_file >> plates[i];
             }
-            
+
             in_file.ignore(100, '\n');
 
             for(int i = 0; i < (num_plates - 1); ++i)
@@ -62,7 +61,7 @@ int main(int argc, char *argv[])
             
             
             cout << "Case #" << cur_case++ <<"\t" << case_total << "\t" << case_total2 << endl;
-            
+
             delete [] plates;
             case_total = case_total2 = 0;
             --num_cases;
@@ -70,9 +69,6 @@ int main(int argc, char *argv[])
     }
     else
         cout << "wtf happened" << endl;
-         
-
-    
     
 
 
